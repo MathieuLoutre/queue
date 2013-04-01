@@ -45,14 +45,16 @@
       while (popping = started < deferrals.length && active < parallelism) {
         var i = started++,
             d = deferrals[i],
+            c = noop,
             a = slice.call(d, 1);
-        a.push(callback(i));
+        if (typeof a[a.length-1] === "function") c = a.pop()
+        a.push(callback(i, c));
         ++active;
         d[0].apply(null, a);
       }
     }
 
-    function callback(i) {
+    function callback(i, c) {
       return function(e, r) {
         --active;
         if (error != null) return;
@@ -61,6 +63,7 @@
           started = remaining = NaN; // stop queued deferrals from starting
           notify();
         } else {
+          c(r, started, remaining-1);
           deferrals[i] = r;
           if (--remaining) popping || pop();
           else notify();
