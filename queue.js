@@ -7,12 +7,12 @@
 
   function queue(parallelism) {
     var queue = {},
-        deferrals = [],
-        started = 0, // number of deferrals that have been started (and perhaps finished)
-        active = 0, // number of deferrals currently being executed (started but not finished)
-        remaining = 0, // number of deferrals not yet finished
-        popping, // inside a synchronous deferral callback?
-        error,
+        tasks = [],
+        started = 0, // number of tasks that have been started (and perhaps finished)
+        active = 0, // number of tasks currently being executed (started but not finished)
+        remaining = 0, // number of tasks not yet finished
+        popping, // inside a synchronous task callback?
+        error = null,
         await = noop,
         all;
 
@@ -20,7 +20,7 @@
 
     queue.defer = function() {
       if (!error) {
-        deferrals.push(arguments);
+        tasks.push(arguments);
         ++remaining;
         pop();
       }
@@ -42,15 +42,15 @@
     };
 
     function pop() {
-      while (popping = started < deferrals.length && active < parallelism) {
+      while (popping = started < tasks.length && active < parallelism) {
         var i = started++,
-            d = deferrals[i],
             c = noop,
-            a = slice.call(d, 1);
+            t = tasks[i],
+            a = slice.call(t, 1);
         if (typeof a[a.length-1] === "function") c = a.pop()
         a.push(callback(i, c));
         ++active;
-        d[0].apply(null, a);
+        t[0].apply(null, a);
       }
     }
 
@@ -59,12 +59,12 @@
         --active;
         if (error != null) return;
         if (e != null) {
-          error = e; // ignore new deferrals and squelch active callbacks
-          started = remaining = NaN; // stop queued deferrals from starting
+          error = e; // ignore new tasks and squelch active callbacks
+          started = remaining = NaN; // stop queued tasks from starting
           notify();
         } else {
           c(r, started, remaining-1);
-          deferrals[i] = r;
+          tasks[i] = r;
           if (--remaining) popping || pop();
           else notify();
         }
@@ -73,8 +73,8 @@
 
     function notify() {
       if (error != null) await(error);
-      else if (all) await(null, deferrals);
-      else await.apply(null, [null].concat(deferrals));
+      else if (all) await(error, tasks);
+      else await.apply(null, [error].concat(tasks));
     }
 
     return queue;
