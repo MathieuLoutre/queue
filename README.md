@@ -21,6 +21,22 @@ q.awaitAll(function(error, results) { console.log("all done!"); });
 
 Queue.js can be run inside Node.js or in a browser.
 
+## Installation
+
+In a browser, you can use the official hosted copy on [d3js.org](http://d3js.org):
+
+```html
+<script src="http://d3js.org/queue.v1.min.js"></script>
+```
+
+In Node, use [NPM](http://npmjs.org) to install:
+
+```bash
+npm install queue-async
+```
+
+Note that the package name is [queue-async](https://npmjs.org/package/queue-async); the name “queue” was already taken.
+
 ## API Reference
 
 ### queue([parallelism])
@@ -34,7 +50,7 @@ Adds the specified asynchronous *task* function to the queue, with any optional 
 ### queue.await(callback)
 ### queue.awaitAll(callback)
 
-Sets the *callback* to be invoked when all deferred tasks have finished. The first argument to the *callback* is the first error that occurred, or null if no error occurred. If *await* is used, each result is passed as an additional separate argument; if *awaitAll* is used, the entire array of results is passed as the second argument to the callback. This method should only be called once, after any tasks have been deferred. If the await callback is set multiple times, or set before a task is deferred, the behavior of the queue is undefined.
+Sets the *callback* to be invoked when all deferred tasks have finished. The first argument to the *callback* is the first error that occurred, or null if no error occurred. If *await* is used, each result is passed as an additional separate argument; if *awaitAll* is used, the entire array of results is passed as the second argument to the callback. If all callbacks have already been completed by the time the *await* or *awaitAll* callback is set, the callback will be invoked immediately. This method should only be called once, after any tasks have been deferred. If the await callback is set multiple times, or set before a task is deferred, the behavior of the queue is undefined.
 
 ## Callbacks
 
